@@ -89,7 +89,7 @@ input[type=color]{width:30px;height:30px;border:2px solid #3a3a3a;
 </head>
 <body>
 <header>
-  <span class="logo">🎨 Gleznotājs</span>
+  <span class="logo">🎨 Fantastiskā tēla gleznotājs</span>
   <button class="tb" id="t-pencil" onclick="setTool('pencil')">✏️<span class="tt">Zīmulis</span></button>
   <button class="tb on" id="t-brush" onclick="setTool('brush')">🖌️<span class="tt">Ota</span></button>
   <button class="tb" id="t-spray" onclick="setTool('spray')">💨<span class="tt">Aerosols</span></button>
@@ -232,7 +232,7 @@ function setSize(v){ size=v; updDot(); }
 const BG={
   pink: ()=>{ DC.fillStyle='#f0b0cc'; DC.fillRect(0,0,CW,CH); },
   white:()=>{ DC.fillStyle='#fafafa'; DC.fillRect(0,0,CW,CH); },
-  sand: ()=>{ DC.fillStyle='#d8d8d8'; DC.fillRect(0,0,CW,CH); },
+  sand: ()=>{ DC.fillStyle='#969393'; DC.fillRect(0,0,CW,CH); },
   grad: ()=>{
     const g=DC.createLinearGradient(0,0,CW,CH);
     g.addColorStop(0,'#ffe0ee'); g.addColorStop(.35,'#dde8ff');
