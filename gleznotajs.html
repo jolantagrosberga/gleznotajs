@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="lv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fantastiskā tēla gleznotājs — 7.2</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;
+  background:linear-gradient(135deg,#303030 0%,#5a4830 55%,#8a6e44 100%);
+  color:#bbb;user-select:none;-webkit-user-select:none}
+header{height:52px;background:#1a1a1a;border-bottom:1px solid #2a2a2a;
+  display:flex;align-items:center;gap:4px;padding:0 10px;flex-shrink:0}
+.logo{font-size:.88rem;font-weight:600;color:#ccc;margin-right:6px;white-space:nowrap}
+.tb{width:38px;height:34px;background:#222;border:1.5px solid #3a3a3a;
+  border-radius:7px;cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .12s;position:relative;flex-shrink:0}
+.tb:hover{background:#2e2e2e;border-color:#555}
+.tb.on{background:#3a3a3a;border-color:#aaa;box-shadow:0 0 8px rgba(255,255,255,.1)}
+.tb .tt{position:absolute;bottom:-28px;left:50%;transform:translateX(-50%);
+  background:#1a1a1a;color:#aaa;font-size:.6rem;padding:2px 6px;border-radius:4px;
+  white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;z-index:200;
+  border:1px solid #333}
+.tb:hover .tt{opacity:1}
+.vd{width:1px;height:26px;background:#2a2a2a;margin:0 2px;flex-shrink:0}
+.sc{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.sc span{font-size:.62rem;color:#555;white-space:nowrap}
+input[type=range]{height:4px;accent-color:#888;cursor:pointer;border-radius:2px;outline:none;border:none}
+#sz-rng{width:80px}
+.cr{display:flex;align-items:center;gap:4px;flex-shrink:0}
+input[type=color]{width:30px;height:30px;border:2px solid #3a3a3a;
+  border-radius:50%;cursor:pointer;background:none;padding:2px;flex-shrink:0}
+.csw{width:21px;height:21px;border-radius:50%;border:2px solid transparent;
+  cursor:pointer;transition:transform .1s;flex-shrink:0}
+.csw:hover{transform:scale(1.2)}
+.csw.on{border-color:#fff;box-shadow:0 0 6px rgba(255,255,255,.35)}
+.sym{display:flex;align-items:center;gap:3px;padding:0 8px;height:32px;
+  background:#222;border:1.5px solid #3a3a3a;border-radius:7px;
+  cursor:pointer;font-size:.65rem;color:#666;white-space:nowrap;flex-shrink:0;transition:all .12s}
+.sym:hover{border-color:#555;color:#aaa}
+.sym.on{background:#3a3a3a;border-color:#aaa;color:#ddd}
+.main{display:flex;flex-direction:column;height:calc(100% - 52px)}
+.ca{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;overflow:hidden;background:transparent}
+/* cw MUST have position:relative so absolute children position inside it */
+.cw{position:relative;border-radius:10px;flex-shrink:0;
+  box-shadow:0 4px 40px rgba(0,0,0,.6),0 0 0 1px rgba(80,80,80,.25);cursor:crosshair}
+#dc{display:block;border-radius:10px}
+#bc{display:none}
+#pc{position:absolute;top:0;left:0;pointer-events:none;border-radius:10px}
+#fl{position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;pointer-events:none}
+.btm{height:50px;background:#1a1a1a;border-top:1px solid #2a2a2a;
+  display:flex;align-items:center;gap:7px;padding:0 12px;flex-shrink:0;overflow:hidden}
+.bl{font-size:.6rem;color:#444;white-space:nowrap}
+.fb{display:flex;align-items:center;gap:4px;padding:4px 8px;
+  background:#222;border:1.5px solid #3a3a3a;border-radius:7px;
+  cursor:pointer;color:#666;font-size:.67rem;white-space:nowrap;transition:all .12s;flex-shrink:0}
+.fb:hover{border-color:#666;background:#2e2e2e;color:#bbb}
+.fb svg{pointer-events:none}
+.bgb{padding:3px 8px;background:#222;border:1.5px solid #3a3a3a;border-radius:6px;
+  cursor:pointer;font-size:.65rem;color:#666;white-space:nowrap;transition:all .12s;flex-shrink:0}
+.bgb:hover{border-color:#555;color:#aaa}
+.bgb.on{border-color:#aaa;color:#ccc;background:#3a3a3a}
+.tw{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.tl{font-size:.6rem;color:#555;white-space:nowrap}
+.tog{width:32px;height:17px;background:#1a1a1a;border:1.5px solid #333;
+  border-radius:9px;position:relative;cursor:pointer;transition:background .2s}
+.tog.on{background:#505050;border-color:#888}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:11px;height:11px;
+  background:#444;border-radius:50%;transition:transform .18s,background .18s}
+.tog.on::after{transform:translateX(15px);background:#ddd}
+/* FEATHER ITEMS */
+.fi{position:absolute;transform-origin:center center;cursor:grab;touch-action:none}
+.fi:active{cursor:grabbing}
+.fi svg{display:block;filter:drop-shadow(0 2px 8px rgba(0,0,0,.55))}
+.fi .fdel{position:absolute;top:-12px;right:-6px;width:17px;height:17px;
+  background:#882222;border-radius:50%;color:#fff;font-size:10px;
+  display:none;align-items:center;justify-content:center;cursor:pointer;
+  z-index:15;border:none;line-height:1}
+.fi:hover .fdel,.fi.sel .fdel{display:flex}
+.fi .frh{position:absolute;bottom:-7px;right:-7px;width:14px;height:14px;
+  background:#666;border-radius:50%;cursor:nwse-resize;display:none;z-index:15}
+.fi:hover .frh,.fi.sel .frh{display:block}
+.fi .froth{position:absolute;top:-16px;left:50%;transform:translateX(-50%);
+  width:13px;height:13px;background:#777;border-radius:50%;cursor:alias;
+  display:none;align-items:center;justify-content:center;z-index:15;font-size:8px;color:#ddd}
+.fi:hover .froth,.fi.sel .froth{display:flex}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">🎨 Gleznotājs</span>
+  <button class="tb" id="t-pencil" onclick="setTool('pencil')">✏️<span class="tt">Zīmulis</span></button>
+  <button class="tb on" id="t-brush" onclick="setTool('brush')">🖌️<span class="tt">Ota</span></button>
+  <button class="tb" id="t-spray" onclick="setTool('spray')">💨<span class="tt">Aerosols</span></button>
+  <button class="tb" id="t-fire" onclick="setTool('fire')">🔥<span class="tt">Uguns</span></button>
+  <button class="tb" id="t-magic" onclick="setTool('magic')">✨<span class="tt">Maģija</span></button>
+  <button class="tb" id="t-eraser" onclick="setTool('eraser')">🧹<span class="tt">Dzēšgumija</span></button>
+  <div class="vd"></div>
+  <div class="sc"><span>Izmērs</span>
+    <input type="range" id="sz-rng" min="1" max="80" value="12" oninput="setSize(+this.value)">
+    <canvas id="sz-dot" width="28" height="28" style="border-radius:50%;flex-shrink:0"></canvas>
+  </div>
+  <div class="vd"></div>
+  <div class="cr">
+    <input type="color" id="cpick" value="#111111" oninput="setColor(this.value,null)">
+    <div class="csw on" style="background:#111111" onclick="setColor('#111111',this)"></div>
+    <div class="csw" style="background:#ffffff" onclick="setColor('#ffffff',this)"></div>
+    <div class="csw" style="background:#e8004d" onclick="setColor('#e8004d',this)"></div>
+    <div class="csw" style="background:#0077cc" onclick="setColor('#0077cc',this)"></div>
+    <div class="csw" style="background:#7700ff" onclick="setColor('#7700ff',this)"></div>
+    <div class="csw" style="background:#00aa44" onclick="setColor('#00aa44',this)"></div>
+    <div class="csw" style="background:#ff8800" onclick="setColor('#ff8800',this)"></div>
+  </div>
+  <div class="vd"></div>
+  <button class="sym" id="sym-btn" onclick="toggleSym(this)">⟺ Simetrija</button>
+  <button class="tb" id="t-vert" onclick="toggleOrient(this)">↕️<span class="tt">Vertikāli / Horizontāli</span></button>
+  <div class="vd"></div>
+  <button class="tb" onclick="undo()">↩️<span class="tt">Atcelt</span></button>
+  <button class="tb" onclick="clearAll()">🗑️<span class="tt">Dzēst visu</span></button>
+</header>
+
+<div class="main">
+  <div class="ca" id="ca">
+    <div class="cw" id="cw">
+      <canvas id="dc"></canvas>
+      <canvas id="bc"></canvas>
+      <canvas id="pc"></canvas>
+      <div id="fl"></div>
+    </div>
+  </div>
+  <div class="btm">
+    <span class="bl">Elementi:</span>
+    <button class="fb" onclick="addF('peacock')">
+      <svg viewBox="-28 -65 56 105" width="13" height="26">
+        <path d="M0,-60 C22,-48 28,-24 22,-5 C16,12 8,24 0,44 C-8,24 -16,12 -22,-5 C-28,-24 -22,-48 0,-60Z" fill="#4CC9C6"/>
+        <ellipse cx="0" cy="-28" rx="9" ry="12" fill="#1a5a7a"/>
+        <ellipse cx="0" cy="-28" rx="4" ry="6" fill="#040f18"/>
+      </svg>Pāvs</button>
+
+    <button class="fb" onclick="addF('fire')">
+      <svg viewBox="-30 -64 60 84" width="20" height="26">
+        <path d="M-12,18 C-20,8 -22,-4 -17,-14 C-13,-22 -15,-32 -12,-40 C-5,-26 -5,-14 -5,-4 C-5,6 -10,14 -12,18Z" fill="#FF4400"/>
+        <path d="M12,18 C20,8 22,-4 17,-14 C12,-24 15,-34 12,-44 C5,-28 5,-16 5,-4 C5,8 10,14 12,18Z" fill="#FF4400"/>
+        <path d="M0,20 C-9,10 -11,-2 -7,-14 C-3,-23 0,-36 0,-62 C0,-36 3,-23 7,-14 C11,-2 9,10 0,20Z" fill="#FF5500"/>
+        <path d="M0,8 C-3,2 -3,-8 0,-20 C3,-8 3,2 0,8Z" fill="#FFD000"/>
+      </svg>Liesma</button>
+
+    <button class="fb" onclick="addF('gold')">
+      <svg viewBox="-12 -52 24 90" width="9" height="26">
+        <path d="M0,-48 C8,-40 10,-25 7,-10 C4,2 2,13 0,36 C-2,13 -4,2 -7,-10 C-10,-25 -8,-40 0,-48Z" fill="#E8B800"/>
+      </svg>Zelta</button>
+
+    <button class="fb" onclick="addF('rain')">
+      <svg viewBox="-14 -30 28 34" width="14" height="24">
+        <path d="M0,-28 C0,-21 13,-8 13,0 A13,13,0,0,1 -13,0 C-13,-8 0,-21 0,-28Z" fill="#39C0EA"/>
+        <path d="M6,-4 C10,-1 11,4 9,6 C11,3 12,-1 9,-4Z" fill="white" opacity=".45"/>
+      </svg>Lietus</button>
+
+    <button class="fb" onclick="addF('snow')">
+      <svg viewBox="-27 -27 54 54" width="22" height="22">
+        <g stroke="#88CCFF" stroke-linecap="round" fill="none" stroke-width="2">
+          <line x1="0" y1="-24" x2="0" y2="24"/>
+          <line x1="-20.8" y1="-12" x2="20.8" y2="12"/>
+          <line x1="-20.8" y1="12" x2="20.8" y2="-12"/>
+          <line x1="0" y1="-20" x2="4.5" y2="-15" stroke-width="1.3"/>
+          <line x1="0" y1="-20" x2="-4.5" y2="-15" stroke-width="1.3"/>
+          <line x1="0" y1="20" x2="4.5" y2="15" stroke-width="1.3"/>
+          <line x1="0" y1="20" x2="-4.5" y2="15" stroke-width="1.3"/>
+          <line x1="18" y1="-10.4" x2="13.5" y2="-6" stroke-width="1.3"/>
+          <line x1="18" y1="-10.4" x2="15" y2="-15.6" stroke-width="1.3"/>
+          <line x1="-18" y1="-10.4" x2="-13.5" y2="-6" stroke-width="1.3"/>
+          <line x1="-18" y1="-10.4" x2="-15" y2="-15.6" stroke-width="1.3"/>
+          <line x1="18" y1="10.4" x2="13.5" y2="6" stroke-width="1.3"/>
+          <line x1="18" y1="10.4" x2="15" y2="15.6" stroke-width="1.3"/>
+          <line x1="-18" y1="10.4" x2="-13.5" y2="6" stroke-width="1.3"/>
+          <line x1="-18" y1="10.4" x2="-15" y2="15.6" stroke-width="1.3"/>
+        </g>
+        <circle cx="0" cy="0" r="4" fill="#88CCFF"/>
+        <circle cx="0" cy="0" r="2" fill="white"/>
+      </svg>Sniegs</button>
+
+    <div class="vd"></div>
+    <div class="tw"><span class="tl">Klikšķa vilnis</span>
+      <div class="tog on" id="tog-ri" onclick="togRi(this)"></div></div>
+    <div class="vd"></div>
+    <span class="bl">Fons:</span>
+    <button class="bgb on" id="bg-pink" onclick="setBG('pink',this)">🌸 Rozā</button>
+    <button class="bgb" id="bg-white" onclick="setBG('white',this)">⬜ Balts</button>
+    <button class="bgb" id="bg-sand" onclick="setBG('sand',this)">⬜ Pelēks</button>
+    <button class="bgb" id="bg-grad" onclick="setBG('grad',this)">🌈 Krāsains</button>
+  </div>
+</div>
+
+<script>
+/* ══ CANVAS SETUP ══ */
+const caEl=document.getElementById('ca'), cwEl=document.getElementById('cw');
+const dcEl=document.getElementById('dc'), bcEl=document.getElementById('bc');
+const pcEl=document.getElementById('pc'), flEl=document.getElementById('fl');
+const DC=dcEl.getContext('2d'), BC=bcEl.getContext('2d'), PC=pcEl.getContext('2d');
+
+let CW=720, CH=480, orient='h';
+let hist=[], particles=[];
+
+function initCanvas(clear){
+  const aw=caEl.clientWidth-20, ah=caEl.clientHeight-20;
+  if(orient==='h'){
+    CW=Math.min(900,Math.floor(Math.min(aw,ah*1.5)));
+    CH=Math.floor(CW/1.5);
+  } else {
+    CH=Math.min(820,Math.floor(Math.min(ah,aw*1.5)));
+    CW=Math.floor(CH/1.5);
+  }
+  [dcEl,bcEl,pcEl].forEach(c=>{c.width=CW;c.height=CH;});
+  cwEl.style.width=CW+'px'; cwEl.style.height=CH+'px';
+  pcEl.style.width=CW+'px'; pcEl.style.height=CH+'px';
+  if(clear){BC.clearRect(0,0,CW,CH);hist=[];particles=[];ripples=[];flEl.innerHTML='';}
+}
+initCanvas(false);
+
+/* ══ STATE ══ */
+let tool='brush', color='#111111', size=12;
+let drawing=false, lx=0, ly=0;
+let symOn=false, ripOn=true, bgMode='pink';
+let sprayTmr=null, fCount=0;
+let ripples=[];
+
+/* setSize must be a function declaration (not arrow) so inline oninput can call it */
+function setSize(v){ size=v; updDot(); }
+
+/* ══ BACKGROUNDS ══ */
+const BG={
+  pink: ()=>{ DC.fillStyle='#f0b0cc'; DC.fillRect(0,0,CW,CH); },
+  white:()=>{ DC.fillStyle='#fafafa'; DC.fillRect(0,0,CW,CH); },
+  sand: ()=>{ DC.fillStyle='#d8d8d8'; DC.fillRect(0,0,CW,CH); },
+  grad: ()=>{
+    const g=DC.createLinearGradient(0,0,CW,CH);
+    g.addColorStop(0,'#ffe0ee'); g.addColorStop(.35,'#dde8ff');
+    g.addColorStop(.7,'#e8ffe0'); g.addColorStop(1,'#fff0da');
+    DC.fillStyle=g; DC.fillRect(0,0,CW,CH);
+  }
+};
+
+/* ══ RENDER (single pass, no SVG filter = no jitter) ══ */
+function renderFrame(){
+  /* Reset DC state every frame */
+  DC.globalCompositeOperation='source-over';
+  DC.globalAlpha=1;
+  DC.shadowBlur=0;
+  /* 1. Background */
+  BG[bgMode]();
+  /* 2. Permanent drawing */
+  DC.drawImage(bcEl,0,0);
+  /* 3. Symmetry guide */
+  if(symOn){
+    DC.save(); DC.setLineDash([4,6]);
+    DC.strokeStyle='rgba(160,160,160,.25)'; DC.lineWidth=1;
+    DC.beginPath(); DC.moveTo(CW/2,0); DC.lineTo(CW/2,CH); DC.stroke();
+    DC.setLineDash([]); DC.restore();
+  }
+  /* 4. Click ripple rings */
+  if(ripOn) drawRipples();
+}
+
+/* ══ CLICK RIPPLE (expanding rings, zero jitter) ══ */
+function triggerRipple(x,y){
+  if(!ripOn) return;
+  ripples.push({x,y,t:Date.now()});
+  if(ripples.length>6) ripples.shift();
+}
+function drawRipples(){
+  const now=Date.now();
+  for(let i=ripples.length-1;i>=0;i--){
+    const {x,y,t}=ripples[i], age=(now-t)/1000;
+    if(age>1){ripples.splice(i,1);continue;}
+    DC.save();
+    DC.strokeStyle=bgMode==='sand'?'rgba(200,180,140,.5)':'rgba(100,100,200,.35)';
+    DC.lineWidth=2*(1-age)+0.5;
+    DC.globalAlpha=(1-age)*0.7;
+    DC.beginPath(); DC.arc(x,y,age*90,0,Math.PI*2); DC.stroke();
+    DC.globalAlpha=(1-age)*0.4;
+    DC.beginPath(); DC.arc(x,y,age*45,0,Math.PI*2); DC.stroke();
+    DC.restore();
+  }
+}
+
+/* ══ PARTICLES ══ */
+function spawnP(x,y,type){
+  if(particles.length>=200) return;
+  const n=type==='fire'?6:5;
+  for(let i=0;i<n;i++){
+    const p={type,x:x+(Math.random()-.5)*size*.5,y:y+(Math.random()-.5)*size*.5};
+    if(type==='fire'){
+      p.vx=(Math.random()-.5)*2; p.vy=-(Math.random()*3+.5);
+      p.life=1; p.dec=.022+Math.random()*.02; p.r=Math.random()*5+2; p.h=10+Math.random()*35;
+    } else {
+      const a=Math.random()*Math.PI*2, s=Math.random()*2.5+.5;
+      p.vx=Math.cos(a)*s; p.vy=Math.sin(a)*s;
+      p.life=1; p.dec=.028+Math.random()*.022; p.r=Math.random()*4+2; p.h=Math.random()*360;
+    }
+    particles.push(p);
+  }
+}
+function stepP(){
+  PC.clearRect(0,0,CW,CH);
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.type==='fire') p.vy-=.08;
+    p.vx*=.97; p.vy*=.97; p.life-=p.dec;
+    if(p.life<=0){particles.splice(i,1);continue;}
+    PC.save(); PC.globalAlpha=p.life*.9;
+    PC.shadowBlur=p.r*2; PC.shadowColor=`hsl(${p.h},100%,60%)`;
+    PC.fillStyle=`hsl(${p.h},100%,${p.type==='fire'?52:68}%)`;
+    if(p.type==='magic') star(PC,p.x,p.y,p.r*.4,p.r);
+    else{PC.beginPath();PC.arc(p.x,p.y,p.r*p.life*.55,0,Math.PI*2);PC.fill();}
+    PC.restore();
+  }
+}
+function star(ctx,cx,cy,inn,out){
+  ctx.beginPath();
+  for(let i=0;i<10;i++){
+    const r=i%2?inn:out, a=i/5*Math.PI-Math.PI/2;
+    i?ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r):ctx.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);
+  }
+  ctx.closePath();ctx.fill();
+}
+
+/* ══ DRAWING ══ */
+function getXY(e){
+  const r=dcEl.getBoundingClientRect(), s=e.touches?e.touches[0]:e;
+  return{x:(s.clientX-r.left)*(CW/r.width), y:(s.clientY-r.top)*(CH/r.height)};
+}
+function startStroke(x,y){
+  hist.push(BC.getImageData(0,0,CW,CH));
+  if(hist.length>20) hist.shift();
+  drawing=true; lx=x; ly=y;
+  if(tool==='spray') startSpray(x,y); else dot(x,y);
+}
+function moveStroke(x,y){
+  if(!drawing) return;
+  if(tool!=='spray') doLine(lx,ly,x,y);
+  if(tool==='fire'||tool==='magic') spawnP(x,y,tool==='fire'?'fire':'magic');
+  lx=x; ly=y;
+}
+function endStroke(){
+  drawing=false; BC.shadowBlur=0; BC.globalAlpha=1;
+  if(sprayTmr){clearInterval(sprayTmr);sprayTmr=null;}
+}
+
+/* ONE DOT at start of stroke */
+function dot(x,y){
+  if(tool==='magic'){magicOp(x,y,x,y);return;}
+  setupBC();
+  BC.beginPath(); BC.arc(x,y,Math.max(.5,size*.3),0,Math.PI*2); BC.fill();
+  if(symOn){BC.beginPath();BC.arc(CW-x,y,Math.max(.5,size*.3),0,Math.PI*2);BC.fill();}
+  BC.shadowBlur=0;
+}
+
+/* LINE SEGMENT */
+function doLine(x1,y1,x2,y2){
+  if(tool==='magic'){magicOp(x1,y1,x2,y2);return;}
+  setupBC();
+  const mx=(x1+x2)/2, my=(y1+y2)/2;
+  BC.beginPath(); BC.moveTo(x1,y1); BC.quadraticCurveTo(x1,y1,mx,my); BC.stroke();
+  if(symOn){BC.beginPath();BC.moveTo(CW-x1,y1);BC.quadraticCurveTo(CW-x1,y1,CW-mx,my);BC.stroke();}
+  BC.shadowBlur=0;
+}
+
+/* SETUP BRUSH PARAMS — size slider directly controls lineWidth */
+function setupBC(){
+  BC.globalCompositeOperation='source-over';
+  BC.globalAlpha=1;
+  BC.lineCap='round'; BC.lineJoin='round';
+
+  if(tool==='eraser'){
+    BC.globalCompositeOperation='destination-out';
+    BC.strokeStyle='rgba(0,0,0,1)'; BC.fillStyle='rgba(0,0,0,1)';
+    BC.lineWidth=size*1.2; BC.shadowBlur=0; return;
+  }
+
+  if(tool==='pencil'){
+    /* Thin, crisp, no glow */
+    BC.strokeStyle=color; BC.fillStyle=color;
+    BC.lineWidth=Math.max(1, size*0.15);
+    BC.shadowBlur=0;
+
+  } else if(tool==='brush'){
+    /* Thick, soft */
+    BC.strokeStyle=color; BC.fillStyle=color;
+    BC.lineWidth=Math.max(2, size*0.6);
+    BC.shadowBlur=size*0.3;
+    BC.shadowColor=color;
+
+  } else if(tool==='fire'){
+    const fi=['#FF4400','#FF6600','#FF9900','#FF2200'];
+    const c=fi[Math.floor(Math.random()*fi.length)];
+    BC.strokeStyle=c; BC.fillStyle=c;
+    BC.lineWidth=Math.max(2,size*0.5);
+    BC.shadowBlur=size*0.8; BC.shadowColor='#FF6600';
+
+  } else {
+    BC.strokeStyle=color; BC.fillStyle=color;
+    BC.lineWidth=Math.max(2,size*0.5);
+    BC.shadowBlur=0;
+  }
+}
+
+/* MAĢIJA — 3 krāsainas nobīdītas līnijas */
+function magicOp(x1,y1,x2,y2){
+  const t=Date.now()/20;
+  const lw=Math.max(1.5, size*0.4);
+  const off=Math.max(5, size*0.35);
+  const mx=(x1+x2)/2, my=(y1+y2)/2;
+  BC.lineCap='round'; BC.lineJoin='round';
+  [{dx:-off,dy:-off*.5,dh:0},{dx:0,dy:0,dh:120},{dx:off,dy:off*.5,dh:240}].forEach(o=>{
+    const h=(t+o.dh)%360;
+    BC.save();
+    BC.globalAlpha=.75; BC.globalCompositeOperation='source-over';
+    BC.strokeStyle=`hsl(${h},100%,60%)`; BC.fillStyle=`hsl(${h},100%,60%)`;
+    BC.lineWidth=lw; BC.shadowBlur=lw*1.8; BC.shadowColor=`hsl(${h},100%,55%)`;
+    if(x1===x2&&y1===y2){
+      BC.beginPath(); BC.arc(x1+o.dx,y1+o.dy,lw*.6,0,Math.PI*2); BC.fill();
+    } else {
+      BC.beginPath(); BC.moveTo(x1+o.dx,y1+o.dy); BC.quadraticCurveTo(x1+o.dx,y1+o.dy,mx+o.dx,my+o.dy); BC.stroke();
+    }
+    if(symOn){
+      if(x1===x2&&y1===y2){
+        BC.beginPath(); BC.arc(CW-x1+o.dx,y1+o.dy,lw*.6,0,Math.PI*2); BC.fill();
+      } else {
+        BC.beginPath(); BC.moveTo(CW-x1+o.dx,y1+o.dy); BC.quadraticCurveTo(CW-x1+o.dx,y1+o.dy,CW-mx+o.dx,my+o.dy); BC.stroke();
+      }
+    }
+    BC.restore();
+  });
+}
+
+/* AEROSOLS */
+function startSpray(cx,cy){
+  doSpray(cx,cy);
+  sprayTmr=setInterval(()=>{if(drawing)doSpray(lx,ly);else{clearInterval(sprayTmr);sprayTmr=null;}},28);
+}
+function doSpray(cx,cy){
+  BC.globalCompositeOperation='source-over'; BC.shadowBlur=0;
+  const n=Math.ceil(size*1.2), rad=size*1.4;
+  for(let i=0;i<n;i++){
+    const ang=Math.random()*Math.PI*2, r=Math.sqrt(Math.random())*rad;
+    BC.fillStyle=shiftH(color,(Math.random()-.5)*40);
+    BC.globalAlpha=.35+Math.random()*.65;
+    const px=cx+Math.cos(ang)*r, py=cy+Math.sin(ang)*r;
+    BC.beginPath(); BC.arc(px,py,Math.random()*1.6+.3,0,Math.PI*2); BC.fill();
+    if(symOn){BC.beginPath();BC.arc(CW-px,py,Math.random()*1.6+.3,0,Math.PI*2);BC.fill();}
+  }
+  BC.globalAlpha=1;
+}
+function shiftH(hex,deg){
+  if(!hex||hex.length<7) return hex;
+  let r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;
+  let h=0,s=0,l=(mx+mn)/2;
+  if(d){s=d/(1-Math.abs(2*l-1));
+    if(mx===r)h=((g-b)/d+6)%6; else if(mx===g)h=(b-r)/d+2; else h=(r-g)/d+4; h*=60;}
+  return`hsl(${((h+deg+360)%360)|0},${(s*100)|0}%,${(l*100)|0}%)`;
+}
+
+/* ══ FEATHER DEFS ══ */
+const FDEFS={
+  peacock:{vb:'-30 -70 60 138',w:60,h:70,svg:`
+<path d="M0,-65 C24,-52 30,-26 23,-6 C17,10 9,24 0,48 C-9,24 -17,10 -23,-6 C-30,-26 -24,-52 0,-65Z" fill="#4CC9C6" opacity=".92"/>
+<path d="M0,-56 C13,-42 17,-22 14,-7" fill="none" stroke="#88FFFF" stroke-width="1.1" opacity=".55"/>
+<path d="M0,-56 C-13,-42 -17,-22 -14,-7" fill="none" stroke="#88FFFF" stroke-width="1.1" opacity=".55"/>
+<path d="M0,-56 C23,-40 27,-12 20,4" fill="none" stroke="#66EEEE" stroke-width=".8" opacity=".4"/>
+<path d="M0,-56 C-23,-40 -27,-12 -20,4" fill="none" stroke="#66EEEE" stroke-width=".8" opacity=".4"/>
+<ellipse cx="0" cy="-32" rx="11" ry="15" fill="#1a5a7a" opacity=".88"/>
+<ellipse cx="0" cy="-32" rx="6" ry="9" fill="#040f18"/>
+<ellipse cx="-2.5" cy="-37" rx="3" ry="2" fill="white" opacity=".7"/>
+<line x1="0" y1="-65" x2="0" y2="48" stroke="#2A8A87" stroke-width="1.5" opacity=".4"/>
+<line x1="0" y1="48" x2="0" y2="65" stroke="#2A8A87" stroke-width="3" stroke-linecap="round"/>`},
+
+  fire:{vb:'-32 -68 64 92',w:64,h:80,svg:`
+<path d="M-13,20 C-21,9 -23,-3 -18,-13 C-14,-21 -16,-31 -13,-41 C-6,-27 -6,-15 -6,-4 C-6,7 -11,15 -13,20Z" fill="#FF4400" opacity=".9"/>
+<path d="M-13,8 C-11,1 -10,-7 -13,-16 C-9,-9 -9,1 -13,8Z" fill="#FFD000" opacity=".85"/>
+<path d="M13,20 C21,9 23,-3 17,-14 C13,-23 16,-35 13,-47 C6,-31 6,-18 6,-5 C6,7 11,15 13,20Z" fill="#FF4400" opacity=".9"/>
+<path d="M13,8 C11,0 11,-9 13,-20 C9,-11 9,0 13,8Z" fill="#FFD000" opacity=".85"/>
+<path d="M0,22 C-10,10 -12,-2 -7,-14 C-3,-24 0,-38 0,-64 C0,-38 3,-24 7,-14 C12,-2 10,10 0,22Z" fill="#FF5500"/>
+<path d="M0,12 C-4,2 -4,-10 0,-26 C4,-10 4,2 0,12Z" fill="#FFD000" opacity=".9"/>
+<path d="M0,4 C-2,-2 0,-12 0,-20 C2,-12 2,-2 0,4Z" fill="white" opacity=".5"/>
+<ellipse cx="0" cy="22" rx="24" ry="7" fill="#FF5500" opacity=".28"/>`},
+
+  gold:{vb:'-14 -56 28 110',w:28,h:56,svg:`
+<path d="M0,-52 C8,-44 10,-28 7,-12 C4,0 2,12 0,38 C-2,12 -4,0 -7,-12 C-10,-28 -8,-44 0,-52Z" fill="#E8B800" opacity=".93"/>
+<path d="M0,-44 C5,-34 7,-18 5,-5" fill="none" stroke="#FFFBE0" stroke-width="1.1" opacity=".6"/>
+<path d="M0,-44 C-5,-34 -7,-18 -5,-5" fill="none" stroke="#FFFBE0" stroke-width="1.1" opacity=".6"/>
+<path d="M0,-28 C3,-20 5,-6 4,12" fill="none" stroke="#FFE066" stroke-width=".9" opacity=".55"/>
+<path d="M0,-28 C-3,-20 -5,-6 -4,12" fill="none" stroke="#FFE066" stroke-width=".9" opacity=".55"/>
+<circle cx="2.5" cy="-18" r="1.8" fill="white" opacity=".72"/>
+<circle cx="-2" cy="3" r="1.4" fill="white" opacity=".6"/>
+<line x1="0" y1="-52" x2="0" y2="38" stroke="#8A6800" stroke-width="1.5" opacity=".44"/>
+<line x1="0" y1="38" x2="0" y2="52" stroke="#8A6800" stroke-width="3" stroke-linecap="round"/>`},
+
+  rain:{vb:'-68 -36 130 44',w:114,h:62,svg:`
+<path d="M0,-32 C0,-24 16,-10 16,0 A16,16,0,0,1 -16,0 C-16,-10 0,-24 0,-32Z" fill="#39C0EA"/>
+<path d="M8,-4 C13,-1 14,4 11,6 C14,3 15,-1 11,-5Z" fill="white" opacity=".40"/>
+<path d="M-34,-24 C-34,-18 -22,-7 -22,0 A12,12,0,0,1 -46,0 C-46,-7 -34,-18 -34,-24Z" fill="#2DAEDC"/>
+<path d="M-26,-3 C-22,0 -21,4 -23,5 C-21,3 -21,-1 -24,-4Z" fill="white" opacity=".37"/>
+<path d="M32,-18 C32,-14 41,-5 41,0 A9,9,0,0,1 23,0 C23,-5 32,-14 32,-18Z" fill="#4EC7EE"/>
+<path d="M37,-2 C40,0 40,3 38,4 C40,2 40,-1 38,-3Z" fill="white" opacity=".35"/>
+<path d="M-58,-12 C-58,-9 -52,-4 -52,0 A6,6,0,0,1 -64,0 C-64,-4 -58,-9 -58,-12Z" fill="#1FA0CE"/>
+<path d="M-55,-1 C-53,0 -53,2 -54,3 C-53,2 -53,0 -55,-2Z" fill="white" opacity=".33"/>
+<path d="M56,-8 C56,-6 60,-3 60,0 A4,4,0,0,1 52,0 C52,-3 56,-6 56,-8Z" fill="#65D0F2"/>
+<path d="M58,0 C60,1 60,2 59,2 C60,1 59,-1 58,-1Z" fill="white" opacity=".30"/>`},
+
+  snow:{vb:'-30 -30 60 60',w:60,h:60,svg:`
+<g stroke="#88CCFF" stroke-linecap="round" fill="none">
+<line x1="0" y1="-26" x2="0" y2="26" stroke-width="2.4"/>
+<line x1="-22.5" y1="-13" x2="22.5" y2="13" stroke-width="2.4"/>
+<line x1="-22.5" y1="13" x2="22.5" y2="-13" stroke-width="2.4"/>
+<line x1="0" y1="-22" x2="5" y2="-17" stroke-width="1.5"/>
+<line x1="0" y1="-22" x2="-5" y2="-17" stroke-width="1.5"/>
+<line x1="0" y1="22" x2="5" y2="17" stroke-width="1.5"/>
+<line x1="0" y1="22" x2="-5" y2="17" stroke-width="1.5"/>
+<line x1="19.5" y1="-11.2" x2="14.5" y2="-6.5" stroke-width="1.5"/>
+<line x1="19.5" y1="-11.2" x2="16.2" y2="-16.8" stroke-width="1.5"/>
+<line x1="-19.5" y1="-11.2" x2="-14.5" y2="-6.5" stroke-width="1.5"/>
+<line x1="-19.5" y1="-11.2" x2="-16.2" y2="-16.8" stroke-width="1.5"/>
+<line x1="19.5" y1="11.2" x2="14.5" y2="6.5" stroke-width="1.5"/>
+<line x1="19.5" y1="11.2" x2="16.2" y2="16.8" stroke-width="1.5"/>
+<line x1="-19.5" y1="11.2" x2="-14.5" y2="6.5" stroke-width="1.5"/>
+<line x1="-19.5" y1="11.2" x2="-16.2" y2="16.8" stroke-width="1.5"/>
+<line x1="0" y1="-14" x2="4.5" y2="-11" stroke-width="1.1"/>
+<line x1="0" y1="-14" x2="-4.5" y2="-11" stroke-width="1.1"/>
+<line x1="0" y1="14" x2="4.5" y2="11" stroke-width="1.1"/>
+<line x1="0" y1="14" x2="-4.5" y2="11" stroke-width="1.1"/>
+<line x1="12.1" y1="7" x2="8.5" y2="11.5" stroke-width="1.1"/>
+<line x1="12.1" y1="7" x2="15.2" y2="2" stroke-width="1.1"/>
+<line x1="-12.1" y1="7" x2="-8.5" y2="11.5" stroke-width="1.1"/>
+<line x1="-12.1" y1="7" x2="-15.2" y2="2" stroke-width="1.1"/>
+<line x1="12.1" y1="-7" x2="8.5" y2="-11.5" stroke-width="1.1"/>
+<line x1="12.1" y1="-7" x2="15.2" y2="-2" stroke-width="1.1"/>
+<line x1="-12.1" y1="-7" x2="-8.5" y2="-11.5" stroke-width="1.1"/>
+<line x1="-12.1" y1="-7" x2="-15.2" y2="-2" stroke-width="1.1"/>
+</g>
+<circle cx="0" cy="0" r="4.5" fill="#88CCFF"/>
+<circle cx="0" cy="0" r="2.2" fill="white"/>`}
+};
+
+/* ══ ADD FEATHER ══ */
+function addF(type){
+  const def=FDEFS[type]; if(!def) return;
+  const el=document.createElement('div'); el.className='fi';
+  let fx=CW/2-def.w/2+(Math.random()-.5)*100;
+  let fy=CH/2-def.h/2+(Math.random()-.5)*80;
+  let fs=1, fr=(Math.random()-.5)*40;
+  const upd=()=>{el.style.left=fx+'px';el.style.top=fy+'px';el.style.transform=`rotate(${fr}deg) scale(${fs})`;};
+  upd();
+  el.innerHTML=`<svg viewBox="${def.vb}" width="${def.w}" height="${def.h}">${def.svg}</svg>
+<button class="fdel" onclick="this.closest('.fi').remove()">×</button>
+<div class="frh"></div><div class="froth">↻</div>`;
+  el.style.pointerEvents='auto';
+  let drag=false,sx=0,sy=0,ox=0,oy=0;
+  el.addEventListener('mousedown',e=>{
+    if(['fdel','frh','froth'].includes(e.target.className)) return;
+    drag=true;sx=e.clientX;sy=e.clientY;ox=fx;oy=fy;
+    document.querySelectorAll('.fi').forEach(f=>f.classList.remove('sel'));
+    el.classList.add('sel');e.stopPropagation();e.preventDefault();
+  });
+  let resz=false,rsY=0,rsSc=1;
+  el.querySelector('.frh').addEventListener('mousedown',e=>{
+    resz=true;rsY=e.clientY;rsSc=fs;e.stopPropagation();e.preventDefault();});
+  let rota=false,raS=0,rrS=0;
+  el.querySelector('.froth').addEventListener('mousedown',e=>{
+    rota=true;
+    const r=dcEl.getBoundingClientRect();
+    const cx=fx+r.left+def.w/2, cy=fy+r.top+def.h/2;
+    raS=Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI; rrS=fr;
+    e.stopPropagation();e.preventDefault();});
+  document.addEventListener('mousemove',e=>{
+    if(drag){const r=dcEl.getBoundingClientRect();fx=ox+(e.clientX-sx);fy=oy+(e.clientY-sy);upd();}
+    if(resz){fs=Math.max(.15,Math.min(6,rsSc+(rsY-e.clientY)*.012));upd();}
+    if(rota){const r=dcEl.getBoundingClientRect();
+      const cx=fx+r.left+def.w/2,cy=fy+r.top+def.h/2;
+      fr=rrS+(Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI-raS);upd();}
+  });
+  document.addEventListener('mouseup',()=>{drag=false;resz=false;rota=false;});
+  flEl.appendChild(el);
+}
+
+/* ══ EVENTS ══ */
+dcEl.addEventListener('mousedown',e=>{const{x,y}=getXY(e);startStroke(x,y);triggerRipple(x,y);});
+dcEl.addEventListener('mousemove',e=>{if(drawing){const{x,y}=getXY(e);moveStroke(x,y);}});
+dcEl.addEventListener('mouseup',endStroke);
+dcEl.addEventListener('mouseleave',endStroke);
+dcEl.addEventListener('touchstart',e=>{e.preventDefault();const{x,y}=getXY(e);startStroke(x,y);triggerRipple(x,y);},{passive:false});
+dcEl.addEventListener('touchmove',e=>{e.preventDefault();const{x,y}=getXY(e);moveStroke(x,y);},{passive:false});
+dcEl.addEventListener('touchend',endStroke);
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='z'){e.preventDefault();undo();}});
+
+/* ══ UI ══ */
+function setTool(t){
+  tool=t;
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('on'));
+  const el=document.getElementById('t-'+t);if(el)el.classList.add('on');
+  dcEl.style.cursor=t==='eraser'?'cell':'crosshair';
+  updDot();
+}
+function setColor(c,el=null){
+  color=c; document.getElementById('cpick').value=c;
+  document.querySelectorAll('.csw').forEach(s=>s.classList.remove('on'));
+  if(el)el.classList.add('on'); updDot();
+}
+function updDot(){
+  const c=document.getElementById('sz-dot').getContext('2d');
+  c.clearRect(0,0,28,28);
+  /* pencil: thin line preview; brush/others: circle preview */
+  if(tool==='pencil'){
+    const lw=Math.max(1,size*.15);
+    c.strokeStyle=color; c.lineWidth=lw; c.lineCap='round';
+    c.beginPath(); c.moveTo(4,24); c.lineTo(24,4); c.stroke();
+  } else if(tool==='eraser'){
+    c.strokeStyle='#884444'; c.lineWidth=1.5;
+    c.strokeRect(6,6,16,16);
+  } else {
+    const r=Math.max(1.5,Math.min(13,size*0.3));
+    c.fillStyle=color; c.globalAlpha=.88;
+    c.beginPath(); c.arc(14,14,r,0,Math.PI*2); c.fill();
+    if(tool==='brush'){c.shadowBlur=r*.5;c.shadowColor=color;}
+  }
+}
+function toggleSym(btn){symOn=!symOn;btn.classList.toggle('on',symOn);}
+function toggleOrient(btn){
+  orient=orient==='h'?'v':'h';
+  btn.classList.toggle('on',orient==='v');
+  initCanvas(true);
+}
+function togRi(tog){ripOn=!ripOn;tog.classList.toggle('on',ripOn);}
+function setBG(m,btn){
+  bgMode=m;
+  document.querySelectorAll('.bgb').forEach(b=>b.classList.remove('on'));
+  if(btn)btn.classList.add('on');
+}
+function undo(){if(!hist.length)return; BC.putImageData(hist.pop(),0,0);}
+function clearAll(){
+  hist.push(BC.getImageData(0,0,CW,CH));
+  BC.clearRect(0,0,CW,CH); particles=[]; ripples=[]; flEl.innerHTML='';
+}
+
+/* ══ MAIN LOOP ══ */
+function loop(){renderFrame();stepP();requestAnimationFrame(loop);}
+updDot(); loop();
+</script>
+</body>
+</html>
