@@ -131,9 +131,9 @@ input[type=color]{width:30px;height:30px;border:2px solid #3a3a3a;
 <div class="main">
   <div class="ca" id="ca">
     <div class="cw" id="cw">
-      <canvas id="dc"></canvas>
-      <canvas id="bc"></canvas>
-      <canvas id="pc"></canvas>
+      <canvas id="dc" width="720" height="480"></canvas>
+      <canvas id="bc" width="720" height="480"></canvas>
+      <canvas id="pc" width="720" height="480"></canvas>
       <div id="fl"></div>
     </div>
   </div>
@@ -211,7 +211,7 @@ function initCanvas(clear){
   pcEl.style.width=CW+'px'; pcEl.style.height=CH+'px';
   if(clear){BC.clearRect(0,0,CW,CH);hist=[];particles=[];ripples=[];flEl.innerHTML='';}
 }
-initCanvas(false); // initial call — will be redone after layout
+/* initCanvas tiks izsaukts window.onload — nevis šeit */
  
 /* ══ STATE ══ */
 let tool='brush', color='#111111', size=12;
@@ -642,14 +642,12 @@ function clearAll(){
 /* ══ MAIN LOOP ══ */
 function loop(){renderFrame();stepP();requestAnimationFrame(loop);}
  
-/* Gaida, kamēr pārlūks ir pabeiguši izkārtojuma aprēķinu */
-function startApp(){
-  if(caEl.clientWidth < 10){ requestAnimationFrame(startApp); return; }
+/* window.onload garantē, ka layout ir pilnībā aprēķināts */
+window.addEventListener('load', function(){
   initCanvas(false);
   updDot();
   loop();
-}
-requestAnimationFrame(startApp);
+});
 </script>
 </body>
 </html>
