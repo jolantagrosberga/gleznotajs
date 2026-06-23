@@ -211,7 +211,7 @@ function initCanvas(clear){
   pcEl.style.width=CW+'px'; pcEl.style.height=CH+'px';
   if(clear){BC.clearRect(0,0,CW,CH);hist=[];particles=[];ripples=[];flEl.innerHTML='';}
 }
-initCanvas(false);
+initCanvas(false); // initial call — will be redone after layout
  
 /* ══ STATE ══ */
 let tool='brush', color='#111111', size=12;
@@ -641,7 +641,15 @@ function clearAll(){
  
 /* ══ MAIN LOOP ══ */
 function loop(){renderFrame();stepP();requestAnimationFrame(loop);}
-updDot(); loop();
+ 
+/* Gaida, kamēr pārlūks ir pabeiguši izkārtojuma aprēķinu */
+function startApp(){
+  if(caEl.clientWidth < 10){ requestAnimationFrame(startApp); return; }
+  initCanvas(false);
+  updDot();
+  loop();
+}
+requestAnimationFrame(startApp);
 </script>
 </body>
 </html>
